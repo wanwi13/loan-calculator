@@ -1,0 +1,39 @@
+@import "tailwindcss";
+
+/* สีจาก 00-Context/02-Brand.md */
+:root {
+  --kanda-orange: #ff6000;
+  --kanda-black: #000000;
+  --kanda-gray: #414141;
+  --kanda-white: #ffffff;
+}
+
+@theme inline {
+  --color-kanda-orange: var(--kanda-orange);
+  --color-kanda-black: var(--kanda-black);
+  --color-kanda-gray: var(--kanda-gray);
+  --color-kanda-white: var(--kanda-white);
+  --font-sans: var(--font-db-heavent), sans-serif;
+}
+
+/* DB Heavent ตัวเล็กกว่าฟอนต์ทั่วไป ขยายขนาดพื้นฐานให้อ่านง่าย */
+html {
+  font-size: 125%;
+}
+
+body {
+  background: var(--kanda-white);
+  color: var(--kanda-gray);
+  font-family: var(--font-db-heavent), sans-serif;
+  font-weight: 400;
+  line-height: 1.35;
+}
+
+/* หัวข้อ = DB Heavent Med */
+h1,
+h2,
+h3 {
+  font-weight: 500;
+  color: var(--kanda-black);
+  line-height: 1.15;
+}
