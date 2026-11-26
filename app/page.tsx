@@ -24,6 +24,18 @@ function monthlyPayment(loan: number, ratePct: number, years: number) {
   return (loan * r) / (1 - Math.pow(1 + r, -n));
 }
 
+// กลับด้านของ monthlyPayment: ผ่อนได้เดือนละเท่านี้ → กู้ได้เท่าไร
+function loanFromPayment(pay: number, ratePct: number, years: number) {
+  const n = years * 12;
+  if (pay <= 0 || n <= 0) return 0;
+  const r = ratePct / 100 / 12;
+  if (r === 0) return pay * n;
+  return (pay * (1 - Math.pow(1 + r, -n))) / r;
+}
+
+const millions = (n: number) =>
+  n > 0 ? (n / 1_000_000).toLocaleString("th-TH", { maximumFractionDigits: 2 }) : "0";
+
 function NumberField({
   label,
   value,
@@ -75,6 +87,16 @@ export default function Home() {
     return { down, loan, pay, total, interest: total - loan, minIncome };
   }, [price, downPct, rate, years, otherDebt]);
 
+  const [salary, setSalary] = useState(30000);
+
+  const a = useMemo(() => {
+    const maxPay = Math.max(salary * DSR - otherDebt, 0);
+    const maxLoan = loanFromPayment(maxPay, rate, years);
+    const loanShare = 1 - Math.min(downPct, 99) / 100;
+    const maxPrice = maxLoan / loanShare;
+    return { maxPay, maxLoan, maxPrice };
+  }, [salary, otherDebt, rate, years, downPct]);
+
   return (
     <main className="mx-auto w-full max-w-5xl px-4 py-8 sm:py-12">
       <header className="flex flex-col items-center text-center">
@@ -94,6 +116,57 @@ export default function Home() {
         </p>
         <div className="mt-6 h-px w-24 bg-kanda-orange/40" />
       </header>
+
+      {/* เงินเดือนเท่านี้ ซื้อบ้านได้เท่าไร */}
+      <section className="mt-8 rounded-2xl border-2 border-kanda-orange/40 bg-kanda-orange/5 p-6">
+        <h2 className="text-2xl sm:text-3xl">
+          เงินเดือนเท่านี้ <span className="text-kanda-orange">ซื้อบ้านได้เท่าไร?</span>
+        </h2>
+        <div className="mt-4 grid gap-6 md:grid-cols-2 md:items-center">
+          <NumberField
+            label="รายได้ต่อเดือน"
+            value={salary}
+            onChange={setSalary}
+            suffix="บาท"
+            step={1000}
+            hint={`ใช้ดอกเบี้ย ${rate}% · ผ่อน ${years} ปี · ดาวน์ ${downPct}% และหนี้อื่นจากช่องด้านล่าง`}
+          />
+          <div>
+            <p className="text-lg">ซื้อบ้านได้ราคาประมาณ</p>
+            <p className="mt-1 text-5xl font-bold text-kanda-orange">
+              {millions(a.maxPrice)} <span className="text-2xl font-normal text-kanda-gray">ล้านบาท</span>
+            </p>
+            <p className="mt-2 text-base">
+              ผ่อนได้ไม่เกิน <span className="text-kanda-black">{baht(a.maxPay)}</span> บาท/เดือน · กู้ได้ราว{" "}
+              <span className="text-kanda-black">{millions(a.maxLoan)}</span> ล้านบาท
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-5">
+          <p className="text-base">แบบบ้านที่อยู่ในงบ (ราคาเริ่มต้น)</p>
+          <div className="mt-2 flex flex-wrap gap-2">
+            {PRESETS.map((p) => {
+              const fits = p.price <= a.maxPrice;
+              return (
+                <button
+                  key={p.label}
+                  type="button"
+                  onClick={() => setPrice(p.price)}
+                  className={`rounded-full border px-4 py-1.5 text-base transition ${
+                    fits
+                      ? "border-green-600 bg-green-50 text-green-700 hover:bg-green-100"
+                      : "border-neutral-300 text-neutral-400"
+                  }`}
+                >
+                  {fits ? "✓" : "✗"} {p.label} · เริ่ม {(p.price / 1_000_000).toFixed(2)} ล้าน
+                </button>
+              );
+            })}
+          </div>
+          <p className="mt-2 text-sm">กดแบบบ้าน เพื่อดูยอดผ่อนต่อเดือนด้านล่างได้เลยค่ะ</p>
+        </div>
+      </section>
 
       <div className="mt-8 grid gap-8 md:grid-cols-2">
         {/* ฝั่งกรอกข้อมูล */}
